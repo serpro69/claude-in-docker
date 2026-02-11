@@ -25,7 +25,7 @@
     "defaultNumTasks": 10,
     "defaultSubtasks": 5,
     "defaultPriority": "medium",
-    "projectName": "claude-starter-kit",
+    "projectName": "claude-in-docker",
     "ollamaBaseURL": "",
     "bedrockBaseURL": "",
     "responseLanguage": "English",
@@ -37,6 +37,6 @@
   "claudeCode": {
     "customSystemPrompt": "",
     "appendSystemPrompt": "",
-    "permissionMode": ""
+    "permissionMode": "default"
   }
 }
