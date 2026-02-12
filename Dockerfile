@@ -1,4 +1,7 @@
 # original source: https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/.devcontainer/Dockerfile
+ARG UV_VERSION=0.6.14
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+
 FROM node:20 AS base
 
 ARG TZ
@@ -19,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   gnupg2 \
   gh \
   jq \
+  python3-venv \
   nano \
   vim \
   gosu \
@@ -51,6 +55,12 @@ RUN ARCH=$(dpkg --print-architecture) && \
   sudo dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
+# Install uv/uvx (Python package manager) for MCP servers that use uvx
+COPY --from=uv /uv /uvx /usr/local/bin/
+
+# Ensure uv cache dir exists for node user
+RUN mkdir -p /home/node/.cache/uv && chown -R node:node /home/node/.cache
+
 # Entrypoint handles UID remapping and drops to node user via gosu
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -60,7 +70,7 @@ USER node
 
 # Install global packages
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
-ENV PATH=$PATH:/usr/local/share/npm-global/bin
+ENV PATH=$PATH:/usr/local/share/npm-global/bin:/home/node/.local/bin
 
 # Set the default shell to zsh rather than sh
 ENV SHELL=/bin/zsh
@@ -79,26 +89,41 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
-# Install Claude
+# Install Claude Code
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Switch back to root for runtime — entrypoint drops to node via gosu
 USER root
 ENTRYPOINT ["entrypoint.sh"]
 
-# --- Firewalled variant: adds network isolation via iptables allowlist ---
-FROM base AS firewalled
+# --- Full variant: pre-installs MCP server packages for faster startup ---
+FROM base AS full
+USER node
+RUN npm install -g task-master-ai
+RUN uv tool install git+https://github.com/oraios/serena && \
+  uv tool install git+https://github.com/BeehiveInnovations/pal-mcp-server.git
+USER root
+
+# --- Final images: combine base/full with open/firewalled ---
+
+# Slim (runtimes only, MCP packages downloaded at runtime via npx/uvx)
+FROM base AS slim-open
+FROM base AS slim-firewalled
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  iptables \
-  ipset \
-  iproute2 \
-  dnsutils \
-  aggregate \
+  iptables ipset iproute2 dnsutils aggregate \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY init-firewall.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
 
-# --- Open variant: no firewall restrictions ---
-FROM base AS open
+# Full (MCP packages pre-installed)
+FROM full AS open
+FROM full AS firewalled
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  iptables ipset iproute2 dnsutils aggregate \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+COPY init-firewall.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-firewall.sh && \
+  echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
+  chmod 0440 /etc/sudoers.d/node-firewall

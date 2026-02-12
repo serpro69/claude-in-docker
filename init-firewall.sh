@@ -72,7 +72,9 @@ for domain in \
   "statsig.com" \
   "marketplace.visualstudio.com" \
   "vscode.blob.core.windows.net" \
-  "update.code.visualstudio.com"; do
+  "update.code.visualstudio.com" \
+  "pypi.org" \
+  "files.pythonhosted.org"; do
   echo "Resolving $domain..."
   ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
   if [ -z "$ips" ]; then
@@ -89,6 +91,30 @@ for domain in \
     ipset add allowed-domains "$ip"
   done < <(echo "$ips")
 done
+
+# Resolve and add user-configured extra domains (comma or space separated)
+if [ -n "${FIREWALL_EXTRA_DOMAINS:-}" ]; then
+  EXTRA_DOMAINS=$(echo "$FIREWALL_EXTRA_DOMAINS" | tr ',' ' ')
+  for domain in $EXTRA_DOMAINS; do
+    domain=$(echo "$domain" | xargs)
+    [ -z "$domain" ] && continue
+    echo "Resolving extra domain: $domain..."
+    ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
+    if [ -z "$ips" ]; then
+      echo "WARNING: Failed to resolve extra domain $domain (skipping)"
+      continue
+    fi
+
+    while read -r ip; do
+      if [[ ! "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo "WARNING: Invalid IP from DNS for $domain: $ip (skipping)"
+        continue
+      fi
+      echo "Adding $ip for $domain"
+      ipset add allowed-domains "$ip" 2>/dev/null || true
+    done < <(echo "$ips")
+  done
+fi
 
 # Get host IP from default route
 HOST_IP=$(ip route | grep default | cut -d" " -f3)
