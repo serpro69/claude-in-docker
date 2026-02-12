@@ -1,4 +1,7 @@
 # original source: https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/.devcontainer/Dockerfile
+ARG UV_VERSION=0.6.14
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+
 FROM node:20 AS base
 
 ARG TZ
@@ -19,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   gnupg2 \
   gh \
   jq \
+  python3-venv \
   nano \
   vim \
   gosu \
@@ -51,6 +55,12 @@ RUN ARCH=$(dpkg --print-architecture) && \
   sudo dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
+# Install uv/uvx (Python package manager) for MCP servers that use uvx
+COPY --from=uv /uv /uvx /usr/local/bin/
+
+# Ensure uv cache dir exists for node user
+RUN mkdir -p /home/node/.cache/uv && chown -R node:node /home/node/.cache
+
 # Entrypoint handles UID remapping and drops to node user via gosu
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -79,8 +89,8 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
-# Install Claude
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+# Install Claude and MCP servers
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} task-master-ai
 
 # Switch back to root for runtime — entrypoint drops to node via gosu
 USER root
