@@ -48,7 +48,15 @@ There are many more reports of similar incidents since the release of Opus 4.6. 
 
 ## How to use this image?
 
-TODO
+```bash
+docker run --rm -ti \
+    -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) \
+    -v "${HOME}/.claude:/home/node/.claude" \
+    -v "${HOME}/.claude.json:/home/node/.claude.json" \
+    -v "$(pwd):$(pwd)" \
+    -w "$(pwd)" \
+    cind-open:latest claude
+```
 
 ## Docker Tags
 

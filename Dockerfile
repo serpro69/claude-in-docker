@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   jq \
   nano \
   vim \
+  gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Ensure default node user has access to /usr/local/share
@@ -50,7 +51,11 @@ RUN ARCH=$(dpkg --print-architecture) && \
   sudo dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
-# Set up non-root user
+# Entrypoint handles UID remapping and drops to node user via gosu
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Switch to node for build steps (installing packages, zsh config)
 USER node
 
 # Install global packages
@@ -77,9 +82,12 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
+# Switch back to root for runtime — entrypoint drops to node via gosu
+USER root
+ENTRYPOINT ["entrypoint.sh"]
+
 # --- Firewalled variant: adds network isolation via iptables allowlist ---
 FROM base AS firewalled
-USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
   iptables \
   ipset \
@@ -91,7 +99,6 @@ COPY init-firewall.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
-USER node
 
 # --- Open variant: no firewall restrictions ---
 FROM base AS open
