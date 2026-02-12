@@ -89,30 +89,41 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
-# Install Claude and Node-based MCP servers
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} task-master-ai
-
-# Install Python-based MCP servers via uv tool install
-RUN uv tool install git+https://github.com/oraios/serena && \
-  uv tool install git+https://github.com/BeehiveInnovations/pal-mcp-server.git
+# Install Claude Code
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Switch back to root for runtime — entrypoint drops to node via gosu
 USER root
 ENTRYPOINT ["entrypoint.sh"]
 
-# --- Firewalled variant: adds network isolation via iptables allowlist ---
-FROM base AS firewalled
+# --- Full variant: pre-installs MCP server packages for faster startup ---
+FROM base AS full
+USER node
+RUN npm install -g task-master-ai
+RUN uv tool install git+https://github.com/oraios/serena && \
+  uv tool install git+https://github.com/BeehiveInnovations/pal-mcp-server.git
+USER root
+
+# --- Final images: combine base/full with open/firewalled ---
+
+# Slim (runtimes only, MCP packages downloaded at runtime via npx/uvx)
+FROM base AS slim-open
+FROM base AS slim-firewalled
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  iptables \
-  ipset \
-  iproute2 \
-  dnsutils \
-  aggregate \
+  iptables ipset iproute2 dnsutils aggregate \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY init-firewall.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
 
-# --- Open variant: no firewall restrictions ---
-FROM base AS open
+# Full (MCP packages pre-installed)
+FROM full AS open
+FROM full AS firewalled
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  iptables ipset iproute2 dnsutils aggregate \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+COPY init-firewall.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-firewall.sh && \
+  echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
+  chmod 0440 /etc/sudoers.d/node-firewall
