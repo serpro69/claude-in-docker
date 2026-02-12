@@ -58,6 +58,17 @@ docker run --rm -ti \
     cind-open:latest claude
 ```
 
+### MCP + `firewalled` variant
+
+
+For MCP servers that call external APIs (pal with Gemini, task-master-ai with Perplexity, etc.), pass the needed domains:
+
+```bash
+docker run --rm -ti --cap-add NET_ADMIN \
+  -e FIREWALL_EXTRA_DOMAINS="generativelanguage.googleapis.com,api.perplexity.ai,api.openai.com" \
+  cind-firewalled:latest claude
+```
+
 ## Docker Tags
 
 Image tags correspond to the claude-code CLI version. These tags are immutable.
