@@ -58,13 +58,38 @@ docker run --rm -ti \
     cind-open:latest claude
 ```
 
-### MCP + `firewalled` variant
+### Plugin / Marketplace Support
 
+When you bind-mount `~/.claude` from the host, plugin marketplace paths (stored as absolute paths in `known_marketplaces.json` and `installed_plugins.json`) will reference the host home directory (e.g. `/Users/sergio/.claude/...`), which doesn't match the container home (`/home/node`). Claude Code validates these paths and rejects the mismatch.
+
+The entrypoint fixes this automatically by copying the affected JSON files, rewriting the paths, and bind-mounting the corrected copies over the originals — so **host files are never modified**.
+
+This requires the `SYS_ADMIN` capability:
+
+```bash
+docker run --rm -ti \
+    --cap-add=SYS_ADMIN \
+    -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) \
+    -v "${HOME}/.claude:/home/node/.claude" \
+    -v "${HOME}/.claude.json:/home/node/.claude.json" \
+    -v "$(pwd):$(pwd)" \
+    -w "$(pwd)" \
+    cind-open:latest claude
+```
+
+> [!NOTE]
+> Without `--cap-add=SYS_ADMIN`, the entrypoint will print a warning and plugins/marketplaces may not work.
+> The firewalled variants already require `--cap-add NET_ADMIN`; adding `SYS_ADMIN` enables both the firewall and plugin path fixes.
+
+### MCP + `firewalled` variant
 
 For MCP servers that call external APIs (pal with Gemini, task-master-ai with Perplexity, etc.), pass the needed domains:
 
 ```bash
-docker run --rm -ti --cap-add NET_ADMIN \
+docker run --rm -ti --cap-add NET_ADMIN --cap-add SYS_ADMIN \
+  -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) \
+  -v "${HOME}/.claude:/home/node/.claude" \
+  -v "${HOME}/.claude.json:/home/node/.claude.json" \
   -e FIREWALL_EXTRA_DOMAINS="generativelanguage.googleapis.com,api.perplexity.ai,api.openai.com" \
   cind-firewalled:latest claude
 ```
