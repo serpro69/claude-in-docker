@@ -48,3 +48,6 @@ When you run Explore:
 **IMPORTANT!!! Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
 
 @./.taskmaster/CLAUDE.md
+
+# Extra Instructions
+@.claude/CLAUDE.extra.md
