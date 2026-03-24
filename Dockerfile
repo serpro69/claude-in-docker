@@ -73,6 +73,9 @@ ENV PATH=$PATH:/usr/local/share/npm-global/bin:/home/node/.local/bin
 # Set the default shell to zsh rather than sh
 ENV SHELL=/bin/zsh
 
+# Enable truecolor (24-bit) so statusline colors render correctly
+ENV COLORTERM=truecolor
+
 # Set the default editor and visual
 ENV EDITOR=nano
 ENV VISUAL=nano
