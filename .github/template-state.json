@@ -6,11 +6,8 @@
   "variables": {
     "PROJECT_NAME": "claude-in-docker",
     "LANGUAGES": "bash,go,markdown",
-    "CC_MODEL": "default",
-    "SERENA_INITIAL_PROMPT": "",
-    "TM_CUSTOM_SYSTEM_PROMPT": "",
-    "TM_APPEND_SYSTEM_PROMPT": "",
-    "TM_PERMISSION_MODE": "default"
+    "CC_MODEL": "opus[1m]",
+    "SERENA_INITIAL_PROMPT": ""
   },
   "plugin_migrated": true
 }
