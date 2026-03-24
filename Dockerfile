@@ -2,12 +2,10 @@
 ARG UV_VERSION=0.6.14
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 
-FROM node:20 AS base
+FROM node:24 AS base
 
 ARG TZ
 ENV TZ="$TZ"
-
-ARG CLAUDE_CODE_VERSION=latest
 
 # Install basic development tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -90,7 +88,7 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -x
 
 # Install Claude Code
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # Switch back to root for runtime — entrypoint drops to node via gosu
 USER root
@@ -99,7 +97,6 @@ ENTRYPOINT ["entrypoint.sh"]
 # --- Full variant: pre-installs MCP server packages for faster startup ---
 FROM base AS full
 USER node
-RUN npm install -g task-master-ai
 RUN uv tool install git+https://github.com/oraios/serena && \
   uv tool install git+https://github.com/BeehiveInnovations/pal-mcp-server.git
 USER root
