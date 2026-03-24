@@ -1,33 +1,15 @@
 # ── Configuration ─────────────────────────────────────────────
 DOCKER_REPO   ?= serpro69/cind
 PLATFORMS     ?= linux/amd64,linux/arm64
-BUILDER_NAME  ?= cind-builder
 
 # All Dockerfile targets and their tag suffixes
 VARIANTS = slim-open slim-firewalled open firewalled
 
-# ── Derived ──────────────────────────────────────────────────
-# VERSION is extracted from the built image after build.
-# For build/push we need it upfront, so we probe from the base target.
-
-.PHONY: help version build push create-builder remove-builder clean
+.PHONY: help version build push clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
-
-# ── Builder management ───────────────────────────────────────
-create-builder: ## Create a buildx builder for multi-platform builds
-	@if ! docker buildx inspect $(BUILDER_NAME) >/dev/null 2>&1; then \
-		echo "Creating buildx builder '$(BUILDER_NAME)'..."; \
-		docker buildx create --name $(BUILDER_NAME) --use --bootstrap; \
-	else \
-		echo "Builder '$(BUILDER_NAME)' already exists"; \
-		docker buildx use $(BUILDER_NAME); \
-	fi
-
-remove-builder: ## Remove the buildx builder
-	docker buildx rm $(BUILDER_NAME) 2>/dev/null || true
 
 # ── Version detection ────────────────────────────────────────
 version: ## Print the claude-code version from the image
@@ -53,7 +35,7 @@ build: ## Build all variants for the local platform
 	done
 
 # ── Push (multi-platform) ───────────────────────────────────
-push: create-builder ## Build multi-platform images and push all variants to Docker Hub
+push: ## Build multi-platform images and push all variants to Docker Hub
 	@echo "Detecting claude-code version..."
 	@VERSION=$$(docker run --rm --entrypoint /bin/sh $(DOCKER_REPO):open -c 'claude --version' 2>/dev/null | awk '{print $$1}' || true); \
 	if [ -z "$$VERSION" ]; then \
@@ -66,7 +48,7 @@ push: create-builder ## Build multi-platform images and push all variants to Doc
 	for variant in $(VARIANTS); do \
 		TAGS="-t $(DOCKER_REPO):$$variant -t $(DOCKER_REPO):$$VERSION-$$variant"; \
 		echo "── Pushing $$variant ($$TAGS) ──"; \
-		docker buildx build --platform $(PLATFORMS) --target $$variant \
+		docker build --platform $(PLATFORMS) --target $$variant \
 			$$TAGS --push . ; \
 	done; \
 	echo ""; \
