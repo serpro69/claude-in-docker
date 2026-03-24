@@ -71,5 +71,6 @@
   "statusLine": {
     "type": "command",
     "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/statusline_enhanced.sh"
-  }
+  },
+  "model": "opus[1m]"
 }
