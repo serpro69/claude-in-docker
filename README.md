@@ -96,17 +96,28 @@ docker run --rm -ti --cap-add NET_ADMIN --cap-add SYS_ADMIN \
 
 ## Docker Tags
 
-Image tags correspond to the claude-code CLI version. These tags are immutable.
+Tags follow the `CC_VERSION-VARIANT` format. Floating variant tags always point to the latest build. Pin via digest (`@sha256:...`) for reproducibility.
 
-Build and Publish
+| Tag | Description |
+|-----|-------------|
+| `2.1.81-open` | Full image, no firewall, pinned to CC version |
+| `2.1.81-firewalled` | Full image, with firewall, pinned to CC version |
+| `2.1.81-slim-open` | Slim image, no firewall, pinned to CC version |
+| `2.1.81-slim-firewalled` | Slim image, with firewall, pinned to CC version |
+| `open` | Floating — latest full image, no firewall |
+| `firewalled` | Floating — latest full image, with firewall |
+| `slim-open` | Floating — latest slim image, no firewall |
+| `slim-firewalled` | Floating — latest slim image, with firewall |
+
+## Build & Publish
 
 ```bash
-make build
-make publish
+make build     # Build all variants for the local platform
+make push      # Build multi-platform (amd64+arm64) and push to Docker Hub
+make version   # Print the claude-code version from the image
+make clean     # Remove locally built images
+make help      # Show all targets
 ```
-
-> [!NOTE]
-> Run make help to see all available commands
 
 ## Contributing
 

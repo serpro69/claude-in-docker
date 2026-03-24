@@ -21,16 +21,16 @@ The project has two main components:
    - Self-verifies by confirming `example.com` is blocked and `api.github.com` is reachable
    - The `node` user has passwordless sudo access **only** for this script
 
-Docker image tags correspond to claude-code CLI versions and are immutable.
+Docker image tags follow `CC_VERSION-VARIANT` format (e.g. `2.1.81-open`). Floating variant tags (`open`, `firewalled`, etc.) always point to the latest build. Pin via digest for reproducibility.
 
 ## Build & Publish
 
-There is no Makefile yet (referenced in README but not created). Docker commands:
-
 ```bash
-docker build -t cind .                                        # build with latest claude-code
-docker build --build-arg CLAUDE_CODE_VERSION=1.0.0 -t cind .  # build with specific version
-docker build --build-arg TZ=Europe/Berlin -t cind .            # set timezone
+make build    # Build all variants for the local platform
+make push     # Build multi-platform (amd64+arm64) and push to Docker Hub
+make version  # Print the claude-code version from the image
+make clean    # Remove locally built cind images
+make help     # Show all targets
 ```
 
 ## Claude-Code Behavioral Instructions
