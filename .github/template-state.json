@@ -6,7 +6,7 @@
   "variables": {
     "PROJECT_NAME": "claude-in-docker",
     "LANGUAGES": "bash,go,markdown",
-    "CC_MODEL": "opus[1m]",
+    "CC_MODEL": "claude-opus-4-6[1m]",
     "SERENA_INITIAL_PROMPT": ""
   },
   "plugin_migrated": true
