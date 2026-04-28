@@ -22,4 +22,5 @@ logs
 # AI tools
 !.serena
 !.claude
+!.codex
 !.taskmaster

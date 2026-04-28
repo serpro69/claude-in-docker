@@ -1,13 +1,19 @@
 {
   "schema_version": "1",
   "upstream_repo": "serpro69/claude-toolbox",
-  "template_version": "3b619efc586fe3033e9ddff54ad39ba9b554d8de",
-  "synced_at": "2026-03-24T13:20:17Z",
+  "template_version": "v0.12.0-rc.3",
+  "synced_at": "2026-04-28T19:42:38Z",
   "variables": {
     "PROJECT_NAME": "claude-in-docker",
     "LANGUAGES": "bash,go,markdown",
     "CC_MODEL": "opus[1m]",
-    "SERENA_INITIAL_PROMPT": ""
+    "SERENA_INITIAL_PROMPT": "",
+    "CC_EFFORT_LEVEL": "high",
+    "CC_PERMISSION_MODE": "default",
+    "CC_STATUSLINE": "enhanced",
+    "CODEX_APPROVAL_POLICY": "on-request",
+    "CODEX_MODEL": "gpt-5.5",
+    "SKIP_CAPY": "false"
   },
   "plugin_migrated": true
 }

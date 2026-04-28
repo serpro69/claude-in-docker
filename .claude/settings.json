@@ -51,7 +51,8 @@
       "Read(./**/venv/)",
       "Read(./**/__pycache__/)"
     ],
-    "ask": []
+    "ask": [],
+    "defaultMode": "default"
   },
   "enabledMcpjsonServers": [],
   "env": {
@@ -72,5 +73,9 @@
     "type": "command",
     "command": "bash $CLAUDE_PROJECT_DIR/.claude/scripts/statusline_enhanced.sh"
   },
-  "model": "opus[1m]"
+  "model": "opus[1m]",
+  "effortLevel": "high",
+  "enabledPlugins": {
+    "kk@claude-toolbox": true
+  }
 }
