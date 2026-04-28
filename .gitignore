@@ -24,3 +24,7 @@ logs
 !.claude
 !.codex
 !.taskmaster
+.capy/**
+!.capy/AGENTS.md
+!.capy.toml
+!.capy/knowledge.db

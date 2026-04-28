@@ -42,10 +42,3 @@ Always follow these guidelines for the given phase.
 When you run Explore:
 
 - **DO NOT** spawn exploration agents unless explicitly asked to do so by the user. **Always explore everything on your own** to gain a complete and thorough understanding.
-
-# Extra Instructions
-@.claude/CLAUDE.extra.md
-
-# capy — MANDATORY routing rules
-
-@.capy/AGENTS.md
