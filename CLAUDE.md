@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **claude-in-docker** (CinD) is a Docker image for running Claude Code in an isolated container. It treats AI agents as untrusted contractors and mitigates risks of running them directly on the host machine.
 
-The image is based on `node:20`, installs claude-code via npm, and includes a network firewall (`init-firewall.sh`) that restricts outbound traffic to an allowlist of domains (GitHub, npm registry, Anthropic API, Sentry, VS Code marketplace).
+The image is based on `node:24`, installs claude-code via npm, and includes a network firewall (`init-firewall.sh`) that restricts outbound traffic to an allowlist of domains (GitHub, npm registry, Anthropic API, Sentry, VS Code marketplace).
 
 ## Architecture
 
@@ -31,6 +31,10 @@ make push     # Build multi-platform (amd64+arm64) and push to Docker Hub
 make version  # Print the claude-code version from the image
 make clean    # Remove locally built cind images
 make help     # Show all targets
+
+# Pin a specific Claude Code version (otherwise latest is auto-detected)
+make build CLAUDE_CODE_VERSION=2.1.81
+make push  CLAUDE_CODE_VERSION=2.1.81
 ```
 
 ## Claude-Code Behavioral Instructions
