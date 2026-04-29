@@ -59,4 +59,15 @@ if [ -d "$PLUGINS_DIR" ]; then
   fi
 fi
 
+# Activate firewall on firewalled image variants before dropping to unprivileged user.
+# Set DISABLE_FIREWALL=1 to skip (e.g. for debugging network issues).
+if [ -f /etc/cind-firewalled ] && [ "${DISABLE_FIREWALL:-0}" != "1" ]; then
+  echo "Activating firewall (firewalled image detected)..."
+  if ! /usr/local/bin/init-firewall.sh; then
+    echo "ERROR: Firewall activation failed." >&2
+    echo "  The firewalled image requires: --cap-add=NET_ADMIN" >&2
+    exit 1
+  fi
+fi
+
 exec gosu node "$@"

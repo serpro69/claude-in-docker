@@ -81,6 +81,24 @@ docker run --rm -ti \
 > Without `--cap-add=SYS_ADMIN`, the entrypoint will print a warning and plugins/marketplaces may not work.
 > The firewalled variants already require `--cap-add NET_ADMIN`; adding `SYS_ADMIN` enables both the firewall and plugin path fixes.
 
+### Firewalled variant
+
+The firewalled image activates the network firewall automatically on startup, restricting outbound traffic to an allowlist of domains (GitHub, npm, Anthropic API, Sentry, VS Code marketplace). This requires `NET_ADMIN`:
+
+```bash
+docker run --rm -ti --cap-add NET_ADMIN --cap-add SYS_ADMIN \
+  -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) \
+  -v "${HOME}/.claude:/home/node/.claude" \
+  -v "${HOME}/.claude.json:/home/node/.claude.json" \
+  -v "$(pwd):$(pwd)" \
+  -w "$(pwd)" \
+  cind-firewalled:latest claude
+```
+
+> [!NOTE]
+> Without `--cap-add=NET_ADMIN` the container will exit with an error — the firewall cannot be configured without this capability.
+> To temporarily disable the firewall for debugging, pass `-e DISABLE_FIREWALL=1`.
+
 ### MCP + `firewalled` variant
 
 For MCP servers that call external APIs (pal with Gemini, task-master-ai with Perplexity, etc.), pass the needed domains:
