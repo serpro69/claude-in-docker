@@ -51,6 +51,21 @@
 
 set -euo pipefail
 
+# Source semver comparison (provides compare() function).
+# Bootstrap: downstream repos may not have this file yet if they haven't synced
+# since it was introduced — fetch from upstream so the script stays self-contained.
+# shellcheck source=semver-compare.sh
+_semver_path="$(dirname "${BASH_SOURCE[0]}")/semver-compare.sh"
+if [[ ! -f "$_semver_path" ]]; then
+  curl -fsSL "https://raw.githubusercontent.com/serpro69/claude-toolbox/master/.github/scripts/semver-compare.sh" \
+    -o "$_semver_path" 2>/dev/null || {
+    echo "Failed to fetch semver-compare.sh" >&2
+    exit 1
+  }
+fi
+source "$_semver_path"
+unset _semver_path
+
 # =============================================================================
 # Global Configuration
 # =============================================================================
@@ -611,12 +626,29 @@ resolve_version() {
 
   case "$target" in
   latest)
-    # Get the most recent tag sorted by version
-    # Note: Use 'grep ... || true' to handle case when no tags exist (grep returns 1 for no matches)
-    resolved=$(git ls-remote --tags --sort=-v:refname "$repo_url" 2>/dev/null |
+    # Find highest version tag using semver comparison (source: semver-compare.sh).
+    # git's --sort=-v:refname is broken for pre-releases: it ranks v1.0.0-rc.1
+    # above v1.0.0. We iterate all tags and compare properly instead.
+    local tags
+    tags=$(git ls-remote --tags "$repo_url" 2>/dev/null |
       { grep -v '\^{}' || true; } |
-      head -1 |
       sed 's/.*refs\/tags\///')
+
+    local tag
+    while IFS= read -r tag; do
+      [[ -z "$tag" ]] && continue
+      local stripped="${tag#v}"
+      # Skip non-semver tags
+      [[ "$stripped" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] || continue
+      if [[ -z "$resolved" ]]; then
+        resolved="$tag"
+      else
+        local resolved_stripped="${resolved#v}"
+        if [[ "$(compare "$stripped" "$resolved_stripped")" == "gt" ]]; then
+          resolved="$tag"
+        fi
+      fi
+    done <<< "$tags"
 
     # If no tags exist, resolve default branch to SHA
     if [[ -z "$resolved" ]]; then
