@@ -7,7 +7,6 @@
     "PROJECT_NAME": "claude-in-docker",
     "LANGUAGES": "bash,go,markdown",
     "CC_MODEL": "claude-opus-4-6[1m]",
-    "SERENA_INITIAL_PROMPT": "",
     "CC_EFFORT_LEVEL": "high",
     "CC_PERMISSION_MODE": "default",
     "CC_STATUSLINE": "enhanced",

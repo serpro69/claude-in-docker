@@ -26,6 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# install capy mcp
+RUN curl -sSfL https://raw.githubusercontent.com/serpro69/capy/master/install.sh | sh
+
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
   chown -R node:node /usr/local/share
@@ -101,8 +104,7 @@ ENTRYPOINT ["entrypoint.sh"]
 # --- Full variant: pre-installs MCP server packages for faster startup ---
 FROM base AS full
 USER node
-RUN uv tool install git+https://github.com/oraios/serena && \
-  uv tool install git+https://github.com/BeehiveInnovations/pal-mcp-server.git
+RUN uv tool install git+https://github.com/serpro69/pal-mcp-server.git
 USER root
 
 # --- Final images: combine base/full with open/firewalled ---
