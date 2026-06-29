@@ -38,7 +38,7 @@ build: ## Build all variants for the local platform
 	echo ""; \
 	for variant in $(VARIANTS); do \
 		echo "── Building $$variant ──"; \
-		docker build --build-arg CLAUDE_CODE_VERSION=$$VERSION \
+		docker build --no-cache --build-arg CLAUDE_CODE_VERSION=$$VERSION \
 			--target $$variant \
 			-t $(DOCKER_REPO):$$variant \
 			-t $(DOCKER_REPO):$$VERSION-$$variant . ; \

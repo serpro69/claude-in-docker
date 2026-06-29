@@ -26,9 +26,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# install capy mcp
-RUN curl -sSfL https://raw.githubusercontent.com/serpro69/capy/master/install.sh | sh
-
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
   chown -R node:node /usr/local/share
@@ -105,6 +102,8 @@ ENTRYPOINT ["entrypoint.sh"]
 FROM base AS full
 USER node
 RUN uv tool install git+https://github.com/serpro69/pal-mcp-server.git
+# install capy mcp
+RUN curl -sSfL https://raw.githubusercontent.com/serpro69/capy/master/install.sh | sh
 USER root
 
 # --- Final images: combine base/full with open/firewalled ---
@@ -116,6 +115,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   iptables ipset iproute2 dnsutils aggregate \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY init-firewall.sh /usr/local/bin/
+# install capy mcp
+RUN curl -sSfL https://raw.githubusercontent.com/serpro69/capy/master/install.sh | sh
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall && \
@@ -128,6 +129,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   iptables ipset iproute2 dnsutils aggregate \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY init-firewall.sh /usr/local/bin/
+# install capy mcp
+RUN curl -sSfL https://raw.githubusercontent.com/serpro69/capy/master/install.sh | sh
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall && \
