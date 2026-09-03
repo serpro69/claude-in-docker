@@ -50,6 +50,6 @@ When you run Explore:
 # Extra Instructions
 @.claude/CLAUDE.extra.md
 
-# capy — MANDATORY routing rules
+# capy — context-window routing
 
 @.capy/AGENTS.md
